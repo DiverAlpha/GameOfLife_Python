@@ -8,6 +8,7 @@ Rules of the game by John Conway
 4. A cell will get born when it has 3 neighbours
 
 Keys to use:
+Escape      Exit the game
 Enter       Start a new game
 Spade       Pause the game
 Right arrow Step the game when it's paused
@@ -19,21 +20,20 @@ import random
 import os
 from random import randrange
 
+# Some pygame stuff
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (750,30)
 pygame.init()
 
 # Define variables
-numCol = 8                     # number of columns - change this to your favorite
-numRow = 8                     # number of rows - change this to your favorite
-windowSizeX = 1000
-windowSizeY = 1000
-screenCentreX = windowSizeX // 2
-screenCentreY = windowSizeY // 2
-generation = 0
-gameStuck = False
-debug = True
-pause = False
-step = False
+numCol = 38              # Number of columns - change this to your favorite
+numRow = 12              # Number of rows - change this to your favorite
+windowSizeX = 1000      # Horizontal windowsize
+windowSizeY = 1000      # Vertical winsowsize
+generation = 0          # Keep track of evolution
+gameStuck = False       # If nothing moves stop the game
+debug = True            # Well... Just for fun
+pause = False           # Hold the game
+step = False            # Step to next generation
 
 # Calculate column width and row height
 colWidth = windowSizeX / numCol
@@ -52,19 +52,19 @@ my_clock = pygame.time.Clock()
 screen = pygame.display.set_mode((windowSizeX, windowSizeY))
 pygame.display.set_caption("John Conway's Game of Life")
 
-# Create gameboard
-gameOld = [[0] * numCol]
+# Create gameboards
+gameOld = [[0] * numCol]                # Create the main game as a 2d array
 for rows in range(numRow - 1):
     gameOld.append([0] * numCol)
-gameNew = [row[:] for row in gameOld] # create gameNew to put results of calculations
-gameTemp1 = [row[:] for row in gameOld] # create gameTemp1 to keep track for progression with last game
-gameTemp2 = [row[:] for row in gameOld] # create gameTemp2 to keep track for progression with game before last game
-gameNb = [row[:] for row in gameOld] # create gameNb to display number of neighbours counted
+gameNew = [row[:] for row in gameOld]   # Create gameNew to put results of calculations
+gameTemp1 = [row[:] for row in gameOld] # Create gameTemp1 to keep track for progression with last game
+gameTemp2 = [row[:] for row in gameOld] # Create gameTemp2 to keep track for progression with game before last game
+gameNb = [row[:] for row in gameOld]    # Create gameNb to display number of neighbours counted
 
 # Calculate number of neighbours
 def getNeighbours(row, col):
     global numCol, numRow, debug
-    count = 0
+    count = 0       # Keep track of neighbours which are alive
 
     # find which cells are neighbours
     if col <= 1: colMin = 0
@@ -89,30 +89,92 @@ def getNeighbours(row, col):
 
     return count
 
-# Fill in some values gameOld
+# Fill gameOld with some pseudo random values
 def fillGame():
-    global numRow, numCol
-    numCells = round(numRow * numCol * random.uniform(0, 0.4))
+    global numRow, numCol, gameOld, gameNew, gameTemp1, gameTemp2, gameNb
 
+    # Empty games
+    gameOld = [[0] * numCol]
+    for rows in range(numRow - 1):
+        gameOld.append([0] * numCol)
+    gameNew = [row[:] for row in gameOld]
+    gameTemp1 = [row[:] for row in gameOld]
+    gameTemp2 = [row[:] for row in gameOld]
+    gameNb = [row[:] for row in gameOld]
+
+    # Decide how many cells to fill
+    numCells = round(numRow * numCol * random.uniform(0, 0.3))
+
+    # Fill gameOld with new stuff
     temp = 0
     for i in range(numCells):
         gameOld[randrange(numRow)][randrange(numCol)] = 1
         temp += 1
 
-def preset32():
+# Preset to start game with a Glider (minimal size: col = 4, row = 4)
+def presetGlider():
     gameOld[1][3] = 1
     gameOld[2][1] = 1
     gameOld[2][3] = 1
     gameOld[3][2] = 1
     gameOld[3][3] = 1
 
-#fillGame()
-preset32()
+# Preset to start game with a Light weight spaceship (minimal size: col = 6, row = 8)
+def presetLwss():
+    gameOld[4][1] = 1
+    gameOld[4][4] = 1
+    gameOld[5][5] = 1
+    gameOld[6][1] = 1
+    gameOld[6][5] = 1
+    gameOld[7][2] = 1
+    gameOld[7][3] = 1
+    gameOld[7][4] = 1
+    gameOld[7][5] = 1
 
-#print("gameOld")
-#for i in range(numRow): # Print for debug
-#    print(gameOld[i])
-#print("")
+# Preset to start game with a Light weight spaceship (minimal size: col = 38, row = 12)
+def presetGliderGun():
+    gameOld[1][25] = 1
+    gameOld[2][23] = 1
+    gameOld[2][25] = 1
+    gameOld[3][13] = 1
+    gameOld[3][14] = 1
+    gameOld[3][21] = 1
+    gameOld[3][22] = 1
+    gameOld[3][35] = 1
+    gameOld[3][36] = 1
+    gameOld[4][12] = 1
+    gameOld[4][16] = 1
+    gameOld[4][21] = 1
+    gameOld[4][22] = 1
+    gameOld[4][35] = 1
+    gameOld[4][36] = 1
+    gameOld[5][1] = 1
+    gameOld[5][2] = 1
+    gameOld[5][11] = 1
+    gameOld[5][17] = 1
+    gameOld[5][21] = 1
+    gameOld[5][22] = 1
+    gameOld[6][1] = 1
+    gameOld[6][2] = 1
+    gameOld[6][11] = 1
+    gameOld[6][15] = 1
+    gameOld[6][17] = 1
+    gameOld[6][18] = 1
+    gameOld[6][23] = 1
+    gameOld[6][25] = 1
+    gameOld[7][11] = 1
+    gameOld[7][17] = 1
+    gameOld[7][25] = 1
+    gameOld[8][12] = 1
+    gameOld[8][16] = 1
+    gameOld[9][13] = 1
+    gameOld[9][14] = 1
+
+# Start game with:
+#fillGame()
+#presetGlider()
+#presetLwss()
+presetGliderGun()
 
 # Mainloop
 done = True
@@ -121,23 +183,23 @@ while done:
     mouseY = 0
     mouseClick = False
 
-    # Check events (inputs)
+    # Check inputs
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:  # Escape, Stop game
+            if event.key == pygame.K_ESCAPE:   # Escape, Stop game
                 done = False
             elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:  # Restart game
                 gameStuck = False
                 generation = 0
                 fillGame()
-            elif event.key == pygame.K_SPACE:
+            elif event.key == pygame.K_SPACE:   # Space, Hold the game
                 if pause: pause = False
                 else: pause = True
-            elif event.key == pygame.K_RIGHT:
+            elif event.key == pygame.K_RIGHT:   # Arrow Right, Step to next generation when on hold
                 step = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        elif event.type == pygame.MOUSEBUTTONDOWN:  # Mouseclick detection
             if event.button == 1:
                 mouseClick = True
                 mouseX = pygame.mouse.get_pos()[0]
@@ -150,7 +212,7 @@ while done:
             for r in range(numRow):
                 for c in range(numCol):
                     neighbours = getNeighbours(r, c)  # Get # of neighbours
-                    gameNb[r][c] = neighbours
+                    gameNb[r][c] = neighbours   # for debug purposes
 
                     if gameOld[r][c] == 1:
                         if neighbours < 2:
@@ -176,6 +238,7 @@ while done:
         # Save gameNew to gameTemp2
         if generation % 2 == 0: gameTemp2 = [row[:] for row in gameNew]  # Copy values of gameNew to gameTemp2
 
+        # Save gameNew to gameOld
         gameOld = [row[:] for row in gameNew]  # copy values of gameNew to gameOld
 
     # Fill screen with black
@@ -188,10 +251,11 @@ while done:
                 pygame.draw.rect(screen, DRKGREEN, [sizeCell * c, sizeCell * r, sizeCell, sizeCell], 0)
 
     # Draw lines for matrix
-    for c in range(1, numCol):
-        pygame.draw.line(screen, BLACK, [sizeCell * c, 0], [sizeCell * c, windowSizeY], 1)
-    for r in range(1, numRow):
-        pygame.draw.line(screen, BLACK, [0, sizeCell * r], [windowSizeX, sizeCell * r], 1)
+    if numCol < 500 and numRow < 500:
+        for c in range(1, numCol):
+            pygame.draw.line(screen, BLACK, [sizeCell * c, 0], [sizeCell * c, windowSizeY], 1)
+        for r in range(1, numRow):
+            pygame.draw.line(screen, BLACK, [0, sizeCell * r], [windowSizeX, sizeCell * r], 1)
 
     # Write text
     font = pygame.font.SysFont('Calibri', 20, True, False)
@@ -217,6 +281,6 @@ while done:
         screen.blit(text, [windowSizeX / 2 - (text.get_width() / 2), 100])
 
     pygame.display.flip()
-    my_clock.tick(2)
+    my_clock.tick(5)
 
 pygame.quit()

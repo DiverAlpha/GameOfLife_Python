@@ -6,24 +6,40 @@ Rules of the game by John Conway
 2. If a cell has 2 or 3 neighbours, the cell stays alive
 3. If a cell has more then 3 neighbours, the cell dies by overpopulation
 4. A cell will get born when it has 3 neighbours
+
+Keys to use:
+Enter       Start a new game
+Spade       Pause the game
+Right arrow Step the game when it's paused
 """
 
 # Import libs
 import pygame
 import random
+import os
 from random import randrange
+
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (750,30)
 pygame.init()
 
 # Define variables
-numCol = 16 # number of columns
-numRow = 16 # number of rows
-windowSizeX = 800
-windowSizeY = 800
+numCol = 8                     # number of columns - change this to your favorite
+numRow = 8                     # number of rows - change this to your favorite
+windowSizeX = 1000
+windowSizeY = 1000
 screenCentreX = windowSizeX // 2
 screenCentreY = windowSizeY // 2
 generation = 0
 gameStuck = False
 debug = True
+pause = False
+step = False
+
+# Calculate column width and row height
+colWidth = windowSizeX / numCol
+rowHeight = windowSizeY / numRow
+if colWidth < rowHeight: sizeCell = colWidth
+else: sizeCell = rowHeight
 
 # Colors
 BLACK = (0, 0, 0)
@@ -34,7 +50,7 @@ RED = (255, 0, 0)
 # Create screen in pygame
 my_clock = pygame.time.Clock()
 screen = pygame.display.set_mode((windowSizeX, windowSizeY))
-pygame.display.set_caption("Game of Life")
+pygame.display.set_caption("John Conway's Game of Life")
 
 # Create gameboard
 gameOld = [[0] * numCol]
@@ -116,48 +132,51 @@ while done:
                 gameStuck = False
                 generation = 0
                 fillGame()
+            elif event.key == pygame.K_SPACE:
+                if pause: pause = False
+                else: pause = True
+            elif event.key == pygame.K_RIGHT:
+                step = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 mouseClick = True
                 mouseX = pygame.mouse.get_pos()[0]
                 mouseY = pygame.mouse.get_pos()[1]
 
-    # Calculate column width and row height
-    colWidth = windowSizeX / numCol
-    rowHeight = windowSizeY / numRow
-
     # Calculate Game of Life
-    if not gameStuck:
-        for r in range(numRow):
-            for c in range(numCol):
-                neighbours = getNeighbours(r, c)  # Get # of neighbours
-                gameNb[r][c] = neighbours
+    if not pause or step:
+        step = False
+        if not gameStuck:
+            for r in range(numRow):
+                for c in range(numCol):
+                    neighbours = getNeighbours(r, c)  # Get # of neighbours
+                    gameNb[r][c] = neighbours
 
-                if gameOld[r][c] == 1:
-                    if neighbours < 2:
-                        gameNew[r][c] = 0  # Die by cause of underpopulation
-                    elif 2 <= neighbours <= 3:
-                        gameNew[r][c] = 1  # Stay alive
-                    elif neighbours > 3:
-                        gameNew[r][c] = 0  # Die by cause of overpopulation
-                else:
-                    if neighbours == 3:
-                        gameNew[r][c] = 1  # Get born
+                    if gameOld[r][c] == 1:
+                        if neighbours < 2:
+                            gameNew[r][c] = 0  # Die by cause of underpopulation
+                        elif 2 <= neighbours <= 3:
+                            gameNew[r][c] = 1  # Stay alive
+                        elif neighbours > 3:
+                            gameNew[r][c] = 0  # Die by cause of overpopulation
+                    else:
+                        if neighbours == 3:
+                            gameNew[r][c] = 1  # Get born
 
-        generation += 1
+            generation += 1
 
-    # Check if  anything is changed
-    if gameTemp1 == gameNew:
-        gameStuck = True
-    if gameTemp2 == gameNew:
-        gameStuck = True
-    else:
-        gameTemp1 = [row[:] for row in gameNew]  # Copy values of gameNew to gameTemp1
+        # Check if  anything is changed
+        if gameTemp1 == gameNew:
+            gameStuck = True
+        if gameTemp2 == gameNew:
+            gameStuck = True
+        else:
+            gameTemp1 = [row[:] for row in gameNew]  # Copy values of gameNew to gameTemp1
 
-    # Save gameNew to gameTemp2
-    if generation % 2 == 0: gameTemp2 = [row[:] for row in gameNew]  # Copy values of gameNew to gameTemp2
+        # Save gameNew to gameTemp2
+        if generation % 2 == 0: gameTemp2 = [row[:] for row in gameNew]  # Copy values of gameNew to gameTemp2
 
-    gameOld = [row[:] for row in gameNew]  # copy values of gameNew to gameOld
+        gameOld = [row[:] for row in gameNew]  # copy values of gameNew to gameOld
 
     # Fill screen with black
     screen.fill(BLACK)
@@ -166,13 +185,13 @@ while done:
     for r in range(numRow):
         for c in range(numCol):
             if gameOld[r][c] == 1:
-                pygame.draw.rect(screen, DRKGREEN, [colWidth * c, rowHeight * r, colWidth, rowHeight], 0)
+                pygame.draw.rect(screen, DRKGREEN, [sizeCell * c, sizeCell * r, sizeCell, sizeCell], 0)
 
     # Draw lines for matrix
     for c in range(1, numCol):
-        pygame.draw.line(screen, BLACK, [colWidth * c, 0], [colWidth * c, windowSizeY], 1)
+        pygame.draw.line(screen, BLACK, [sizeCell * c, 0], [sizeCell * c, windowSizeY], 1)
     for r in range(1, numRow):
-        pygame.draw.line(screen, BLACK, [0, rowHeight * r], [windowSizeX, rowHeight * r], 1)
+        pygame.draw.line(screen, BLACK, [0, sizeCell * r], [windowSizeX, sizeCell * r], 1)
 
     # Write text
     font = pygame.font.SysFont('Calibri', 20, True, False)
@@ -191,6 +210,11 @@ while done:
                     generation = 0
                     gameStuck = False
                     fillGame()
+
+    # If the game is put on hold
+    if pause:
+        text = font.render("Game on hold", True, RED)
+        screen.blit(text, [windowSizeX / 2 - (text.get_width() / 2), 100])
 
     pygame.display.flip()
     my_clock.tick(2)
